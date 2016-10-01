@@ -1,0 +1,372 @@
+﻿CS3251 Project 1 Socket programming Sample Output Report
+Mingjun Xie
+Introduction:
+This sample output report consists of 2 sections: simple test and complex test.
+For simple test, I will run test with only one account.
+For complex test, I will run the bash file test-tcp.sh and test-udp.sh for all accounts in file password.csv.
+
+Contents in both sections:
+1. Client Side Cases:
+1) Successful authentication
+2) Unsuccessful authentication
+	i. Invalid username
+	ii. Wrong password
+3) Client runs without server running
+4) Command line error
+	i.  Empty entry or entries for command line
+	ii. Bad portnumber (valid port number: 1024 – 65535)
+	iii. Bad sensor value
+4) Packet loss
+	i. Timeout mechanism for udp
+
+2. Server Side Cases:
+1) Successful authentication
+2) Unsuccessful authentication
+	i. Invalid username
+	ii. Wrong password
+3) Command line error
+	i.  Empty entry or entries for command line
+	ii. Bad portnumber (valid port number: 1024 – 65535)
+	iii. File open error
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Simple test Comments:
+The output below are not in -d mode.if arg.isdigit():
+On -d option, provide appropriate messages (Received authentication request, Sending sensor data to client etc.) for server and client.
+In all the example below, I use a single account with user name “mxie33” and password “960902”
+
+CLIENT SIDE CASES:
+
+Case 1: Successful authentication
+ 
+python sensor-tcp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r 10
+python sensor-udp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r 10
+
+On execution of the above command, a successful connection for TCP should be created. For UDP, there's no need for connection. In this case, the user name and password are both correct. 
+
+Output for sensor-tcp.py:
+
+Reply from server: 
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 19:55:01 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.3
+
+Output for sensor-udp.py:
+
+Reply from server: 
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 19:47:22 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+closing socket
+
+Case 2: Unsuccessful authentication
+
+python sensor-tcp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960903” -r 10
+python sensor-udp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960903” -r 10
+
+On the command above, a successful connection for TCP is created. No connection for UDP. In this case, the user name is correct, but the password is wrong. So the server should send a authentication fail message to the client.
+
+Output for sensor.tcp.py:
+
+Reply from server: 
+Hash not matched. User authentication failed.
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+ 
+Output for sensor.udp.py:
+
+Socket created
+Reply from server: 
+Hash not matched, password maybe wrong. User authentication failed.
+closing socket
+
+python sensor-tcp.py -s 172.17.0.3 -p 8591 –u “mxie3” -c “960903” -r 10
+python sensor-udp.py -s 172.17.0.3 -p 8591 –u “mxie3” -c “960903” -r 10
+
+On the command above, a successful connection for TCP is created. No connection for UDP. In this case, the user name is incorrect. So the server should send a authentication fail message to the client.
+
+Output for sensor-tcp.py:
+
+Reply from server: 
+Invalid username:mxie3, User authentication failed.
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+
+Output for sensor-udp.py:
+
+Socket created
+Reply from server: 
+Invalid username:mxie3, User authentication failed.
+closing socket
+
+Case 3: Client run without server running
+
+python sensor-tcp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r 10
+python sensor-udp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r 10
+
+On the above command, I gave all correct informations and didn't run the server. So for TCP there should be an error in connection, and for UDP the client will fail receive message from the server after 3 times for 3s-time-out.
+
+Output for sensor-tcp.py:
+Connection error:  [Errno 111] Connection refused
+
+Output for sensor-udp.py:
+Socket created
+Challenge receive time out:  timed out
+Challenge receive time out:  timed out
+Challenge receive time out:  timed out
+Server failed to response request.
+
+Case 4: Command line error
+
+python sensor-tcp.py (empty command line parser)
+output:Please don't let server, port number, username, password or sensorvalue be null
+python sensor-tcp.py -s hhh -p 8591 –u “mxie33” -c “960902” -r 10 (wrong server address)
+output: Hostname could not be resolved. Exiting
+python sensor-tcp.py -s 172.17.0.3 -p hhh –u “mxie33” -c “960902” -r 10 (wrong port number)
+output:Port number is not in digits.
+python sensor-tcp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r abc (wrong sensor value)
+output:Bad sensor value: sensor value is not in digits.
+
+python sensor-udp.py (empty command line parser)
+output:Please don't let server, port number, username, password or sensorvalue be null
+python sensor-udp.py -s hhh -p 8591 –u “mxie33” -c “960902” -r 10 (wrong server address)
+output:Hostname hhh could not be resolved. Exiting
+python sensor-udp.py -s 172.17.0.3 -p hhh –u “mxie33” -c “960902” -r 10 (wrong port number)
+output:Port number is not in digits.
+python sensor-udp.py -s 172.17.0.3 -p 8591 –u “mxie33” -c “960902” -r abc (wrong sensor value)
+output:Bad sensor value: sensor value is not in digits.
+
+Case 5: Time out mechanism in UDP
+In case 3 we test udp without server running, which is a good example for dealing with packet loss.
+I make max tries to be 3 times and time out to be 3s.
+
+Output for sensor-udp.py:
+Socket created
+Challenge receive time out:  timed out
+Challenge receive time out:  timed out
+Challenge receive time out:  timed out
+Server failed to respond request.
+
+SERVER SIDE:
+ 
+Case 1: Successful authentication
+
+Output sensor-server-tcp.py:
+
+Connected with 172.17.0.2:53983
+Request Received.
+Reply sent successfully:
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 21:10:52 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+
+Output sensor-server-udp.py:
+
+Reply sent successfully:
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 21:12:14 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+sent 116 bytes back to ('172.17.0.2', 49332)
+Connection Closed with 172.17.0.2:53983
+ 
+Case 2: Successful authentication with two requests from the same client with sensor values as 70 and 80
+Output for sensor-server-tcp.py:
+Connected with 172.17.0.2:53989
+Request Received.
+Reply sent successfully:
+Sensor: mxie33 recorded: 80.0 time: 2016-09-30 21:16:40 sensorMin: 70.0 sensorAvg: 75.0 sensorMax: 80.0 allAvg: 75.0
+Connection Closed with 172.17.0.2:5398
+
+Output for sensor-server-udp.py:
+Reply sent successfully:
+Sensor: mxie33 recorded: 80.0 time: 2016-09-30 21:18:25 sensorMin: 70.0 sensorAvg: 75.0 sensorMax: 80.0 allAvg: 75.0
+sent 116 bytes back to ('172.17.0.2', 58124)
+ 
+Case 4: Bad authentication
+
+invalid username:
+
+Output for sensor-server-tcp.py:
+
+Connected with 172.17.0.2:53991
+Request Received.
+Reply sent successfully:
+Invalid username:mxie3, User authentication failed.
+Connection Closed with 172.17.0.2:53991
+
+Output for sensor-server-udp.py:
+
+Reply sent successfully:
+Invalid username:mxie3, User authentication failed.
+sent 51 bytes back to ('172.17.0.2', 55017)
+ 
+Wrong password:
+
+Output for sensor-server-tcp.py:
+
+Connected with 172.17.0.2:53992
+Request Received.
+Reply sent successfully:
+Hash not matched. User authentication failed.
+Connection Closed with 172.17.0.2:53992
+
+Output for sensor-server-udp.py:
+
+Reply sent successfully:
+Hash not matched, password maybe wrong. User authentication failed.
+sent 67 bytes back to ('172.17.0.2', 47226)
+
+Case 6: Command line errors
+Same for tcp and udp server:
+Port number is not in digits.
+ (if port is not in digits)
+File open failed. (if file name is bad)
+
+Complext Test:
+Test bash files: testing-tcp.sh testing-udp.sh
+
+For TCP test:
+Client side output:
+root@45552498772c:/home/CS3251_Proj1/myfiles# bash testing-tcp.sh
+Reply from server: 
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 22:38:03 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Invalid username:mxie3, User authentication failed.
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Hash not matched. User authentication failed.
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Sensor: xyuan39 recorded: 20.0 time: 2016-09-30 22:38:03 sensorMin: 20.0 sensorAvg: 20.0 sensorMax: 20.0 allAvg: 15.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Sensor: tgong7 recorded: 30.0 time: 2016-09-30 22:38:03 sensorMin: 30.0 sensorAvg: 30.0 sensorMax: 30.0 allAvg: 20.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Sensor: yzhou376 recorded: 40.0 time: 2016-09-30 22:38:03 sensorMin: 40.0 sensorAvg: 40.0 sensorMax: 40.0 allAvg: 25.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Sensor: zwu78 recorded: 50.0 time: 2016-09-30 22:38:03 sensorMin: 50.0 sensorAvg: 50.0 sensorMax: 50.0 allAvg: 30.0
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+Reply from server: 
+Bad sensor value.
+Socket Closed to 172.17.0.3 on ip 172.17.0.2
+testing-udp.sh
+
+Server side output:
+root@acecc710c892:/home/CS3251_Proj1/myfiles# python sensor-server-tcp.py -p 8591 -f password.csv
+Socket now listening on port [8591]
+Connected with 172.17.0.2:41348
+Request Received.
+Reply sent successfully:
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 22:38:03 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+Connection Closed with 172.17.0.2:41348
+Connected with 172.17.0.2:41349
+Request Received.
+Reply sent successfully:
+Invalid username:mxie3, User authentication failed.
+Connection Closed with 172.17.0.2:41349
+Connected with 172.17.0.2:41350
+Request Received.
+Reply sent successfully:
+Hash not matched. User authentication failed.
+Connection Closed with 172.17.0.2:41350
+Connected with 172.17.0.2:41351
+Request Received.
+Reply sent successfully:
+Sensor: xyuan39 recorded: 20.0 time: 2016-09-30 22:38:03 sensorMin: 20.0 sensorAvg: 20.0 sensorMax: 20.0 allAvg: 15.0
+Connection Closed with 172.17.0.2:41351
+Connected with 172.17.0.2:41352
+Request Received.
+Reply sent successfully:
+Sensor: tgong7 recorded: 30.0 time: 2016-09-30 22:38:03 sensorMin: 30.0 sensorAvg: 30.0 sensorMax: 30.0 allAvg: 20.0
+Connection Closed with 172.17.0.2:41352
+Connected with 172.17.0.2:41353
+Request Received.
+Reply sent successfully:
+Sensor: yzhou376 recorded: 40.0 time: 2016-09-30 22:38:03 sensorMin: 40.0 sensorAvg: 40.0 sensorMax: 40.0 allAvg: 25.0
+Connection Closed with 172.17.0.2:41353
+Connected with 172.17.0.2:41354
+Request Received.
+Reply sent successfully:
+Sensor: zwu78 recorded: 50.0 time: 2016-09-30 22:38:03 sensorMin: 50.0 sensorAvg: 50.0 sensorMax: 50.0 allAvg: 30.0
+Connection Closed with 172.17.0.2:41354
+Connected with 172.17.0.2:41355
+Request Received.
+Connection Closed with 172.17.0.2:41355
+
+For UDP test:
+Client side output:
+root@45552498772c:/home/CS3251_Proj1/myfiles# bash testing-udp.sh
+Socket created
+Reply from server: 
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 22:35:44 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 26.6666666667
+closing socket
+Socket created
+Reply from server: 
+Invalid username:mxie3, User authentication failed.
+closing socket
+Socket created
+Reply from server: 
+Hash not matched, password maybe wrong. User authentication failed.
+closing socket
+Socket created
+Reply from server: 
+Sensor: xyuan39 recorded: 20.0 time: 2016-09-30 22:35:44 sensorMin: 20.0 sensorAvg: 20.0 sensorMax: 20.0 allAvg: 25.7142857143
+closing socket
+Socket created
+Reply from server: 
+Sensor: tgong7 recorded: 30.0 time: 2016-09-30 22:35:44 sensorMin: 30.0 sensorAvg: 30.0 sensorMax: 30.0 allAvg: 26.25
+closing socket
+Socket created
+Reply from server: 
+Sensor: yzhou376 recorded: 40.0 time: 2016-09-30 22:35:44 sensorMin: 40.0 sensorAvg: 40.0 sensorMax: 40.0 allAvg: 27.7777777778
+closing socket
+Socket created
+Reply from server: 
+Sensor: zwu78 recorded: 50.0 time: 2016-09-30 22:35:44 sensorMin: 50.0 sensorAvg: 50.0 sensorMax: 50.0 allAvg: 30.0
+closing socket
+Socket created
+Reply from server: 
+Bad sensor value!
+closing socket
+
+Server side output:
+root@acecc710c892:/home/CS3251_Proj1/myfiles# python sensor-server-udp.py -p 8591 -f password.csv
+Socket created
+Bind complete: started on 172.17.0.3 port 8591
+Reply sent successfully:
+Sensor: mxie33 recorded: 10.0 time: 2016-09-30 22:36:37 sensorMin: 10.0 sensorAvg: 10.0 sensorMax: 10.0 allAvg: 10.0
+sent 116 bytes back to ('172.17.0.2', 52629)
+Reply sent successfully:
+Invalid username:mxie3, User authentication failed.
+sent 51 bytes back to ('172.17.0.2', 59154)
+Reply sent successfully:
+Hash not matched, password maybe wrong. User authentication failed.
+sent 67 bytes back to ('172.17.0.2', 56230)
+Reply sent successfully:
+Sensor: xyuan39 recorded: 20.0 time: 2016-09-30 22:36:37 sensorMin: 20.0 sensorAvg: 20.0 sensorMax: 20.0 allAvg: 15.0
+sent 117 bytes back to ('172.17.0.2', 42536)
+Reply sent successfully:
+Sensor: tgong7 recorded: 30.0 time: 2016-09-30 22:36:37 sensorMin: 30.0 sensorAvg: 30.0 sensorMax: 30.0 allAvg: 20.0
+sent 116 bytes back to ('172.17.0.2', 33411)
+Reply sent successfully:
+Sensor: yzhou376 recorded: 40.0 time: 2016-09-30 22:36:37 sensorMin: 40.0 sensorAvg: 40.0 sensorMax: 40.0 allAvg: 25.0
+sent 118 bytes back to ('172.17.0.2', 53261)
+Reply sent successfully:
+Sensor: zwu78 recorded: 50.0 time: 2016-09-30 22:36:37 sensorMin: 50.0 sensorAvg: 50.0 sensorMax: 50.0 allAvg: 30.0
+sent 115 bytes back to ('172.17.0.2', 50692)
+Bad sensor value!
+
+
+
