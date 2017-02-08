@@ -89,10 +89,14 @@ if __name__ == "__main__":
     # read file
     msg = ""
     # Read the message file
-    f = open(file, 'r')
-    for row in f:
-        row = row.replace('\n', "")
-        msg += (str)(row) # the list is for storing spam words
-    f.close()
+    try:
+        f = open(file, 'r')
+        for row in f:
+            row = row.replace('\n', "")
+            msg += (str)(row) # the list is for storing spam words
+        f.close()
+    except IOError, err:
+        print "IO error: ", err
+        sys.exit()
 
     runUDPClient()

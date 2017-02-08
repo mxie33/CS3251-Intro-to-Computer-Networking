@@ -1,0 +1,6 @@
+credit
+money
+password
+lottery
+buy
+free

@@ -19,7 +19,7 @@ def runUDPServer():
         sys.exit()
 
     # Bind the socket to the port
-    HOST = socket.gethostbyname(socket.gethostname())
+    HOST = socket.gethostname()
     server_address = (HOST, PORT)
 
     try:
@@ -38,21 +38,30 @@ def runUDPServer():
             continue
 
         reply = ""
-        if len(data) == 0:
+        if len(data) == 0 or len(data) > 1000:
             reply = "0 -1 bad input"
         else:
+            msg_length = len(data)
             data = data.translate(None, string.punctuation)
             messages = data.split(" ")
             spam = 0.0
             s_words_reply = ""
+            allAscii = True
             for word in messages:
-                if word.lower() in s_words:
-                    spam += 1
-                    s_words_reply += " " + word
-            scores = spam/len(messages)
-            spam = spam % 2**32  # ???? cast into unsigned int
-            reply = (str)(scores) + " " + (str)(spam) + " " + s_words_reply
+                try:
+                    word.decode('ascii')
+                    if word.lower() in s_words:
+                        spam += 1
+                        s_words_reply += " " + word
+                except:
+                    reply = "0 -1 bad input"
+                    allAscii = False
+                    break
 
+            if allAscii:
+                scores = spam/msg_length
+                spam = spam % 2**32  #?? cast into unsigned int
+                reply = (str)(scores) + " " + (str)(spam) + " " + s_words_reply
         #send reply to the client
         try:
             sent = udpSock.sendto(reply, clientAddress)
@@ -87,10 +96,14 @@ if __name__ == "__main__":
 
     # Read the spam words file
     s_words = []
-    f = open(filename, 'r')
-    for row in f:
-        row = row.replace('\n', "")
-        s_words.append((str)(row)) # the list is for storing spam words
-    f.close()
+    try:
+        f = open(filename, 'r')
+        for row in f:
+            row = row.replace('\n', "")
+            s_words.append((str)(row)) # the list is for storing spam words
+        f.close()
+    except IOError, err:
+        print "IO error: ", err
+        sys.exit()
 
     runUDPServer()

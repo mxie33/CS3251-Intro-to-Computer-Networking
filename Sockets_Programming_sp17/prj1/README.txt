@@ -16,3 +16,6 @@
 	Some examples:
 	i.e. python smsengineTCP.py 8591 words.txt
 	i.e. python smsclientTCP.py 127.0.1.1 8591 message.txt
+5. Constraints
+	port number can only be in range(1024,65536) in order to not using reserved port for other protocols.
+	

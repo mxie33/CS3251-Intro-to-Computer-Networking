@@ -1,0 +1,66 @@
+Sample  messages and spam words file:
+msg.txt: Hello, this is Mingjun! Can you give me your credit card password?
+badmsg.txt:Hello, this is Mingjun! CÂn you give me your credit card password?
+spam.txt: credit, money, password, lottery, buy, free
+
+1. TCP cases
+
+a. Successful connection and spam words detected
+	Server:
+	[mxie33@networklab1 prj1]$ python smsengineTCP.py 8591 spam.txt
+	Server IP: networklab1
+	Socket now listening on port [8591]
+	...
+
+	Client:
+	[mxie33@networklab1 prj1]$ python smsclientTCP.py networklab1 8591 msg.txt
+	serverIP:  130.207.107.12
+	Socket Connected to networklab1 on ip 130.207.107.12
+	Reply from server: 
+	0.030303030303 2.0  credit password
+
+b. Bad input
+
+	client:
+	[mxie33@networklab1 prj1]$ python smsclientTCP.py networklab1 8591 badmsg.txt
+	serverIP:  130.207.107.12
+	Socket Connected to networklab1 on ip 130.207.107.12
+	Reply from server: 
+	0 -1 bad input
+
+2. UDP cases
+
+a. Successful connection and spam words detected
+	Server:
+	[mxie33@networklab1 prj1]$ python smsengineUDP.py 8591 spam.txt
+	Socket created
+	Bind complete: started on networklab1 port 8591
+	Reply sent successfully:
+	0.030303030303 2.0  credit password
+	sent 35 bytes back to ('130.207.107.12', 39452)
+
+	Client:
+	[mxie33@networklab1 prj1]$ python smsclientUDP.py networklab1 8591 msg.txt
+	Socket created
+	Reply from server: 
+	0.030303030303 2.0  credit password
+	Socket closed
+
+b. Bad input
+
+	Client:
+	[mxie33@networklab1 prj1]$ python smsclientUDP.py networklab1 8591 badmsg.txt
+	Socket created
+	Reply from server: 
+	0 -1 bad input
+	Socket closed
+
+c. Server not running and hence not replying the client
+	
+	Client:
+	[mxie33@networklab1 prj1]$ python smsclientUDP.py networklab1 8591 msg.txt
+	Socket created
+	Result receive error:  timed out after try  1 times.
+	Result receive error:  timed out after try  2 times.
+	Result receive error:  timed out after try  3 times.
+	After 3 tries, still fail to receive response. Socket close.
