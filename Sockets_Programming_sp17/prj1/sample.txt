@@ -17,7 +17,7 @@ a. Successful connection and spam words detected
 	serverIP:  130.207.107.12
 	Socket Connected to networklab1 on ip 130.207.107.12
 	Reply from server: 
-	0.030303030303 2.0  credit password
+	0.166666666667 12  credit password
 
 b. Bad input
 
@@ -36,14 +36,14 @@ a. Successful connection and spam words detected
 	Socket created
 	Bind complete: started on networklab1 port 8591
 	Reply sent successfully:
-	0.030303030303 2.0  credit password
+	0.166666666667 12  credit password
 	sent 35 bytes back to ('130.207.107.12', 39452)
 
 	Client:
 	[mxie33@networklab1 prj1]$ python smsclientUDP.py networklab1 8591 msg.txt
 	Socket created
 	Reply from server: 
-	0.030303030303 2.0  credit password
+	0.166666666667 12  credit password
 	Socket closed
 
 b. Bad input

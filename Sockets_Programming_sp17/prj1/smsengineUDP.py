@@ -41,9 +41,10 @@ def runUDPServer():
         if len(data) == 0 or len(data) > 1000:
             reply = "0 -1 bad input"
         else:
-            msg_length = len(data)
+
             data = data.translate(None, string.punctuation)
             messages = data.split(" ")
+            msg_length = len(messages)
             spam = 0.0
             s_words_reply = ""
             allAscii = True
@@ -61,7 +62,7 @@ def runUDPServer():
             if allAscii:
                 scores = spam/msg_length
                 spam = spam % 2**32  #?? cast into unsigned int
-                reply = (str)(scores) + " " + (str)(spam) + " " + s_words_reply
+                reply = (str)(scores) + " " + (str)(msg_length) + " " + s_words_reply
         #send reply to the client
         try:
             sent = udpSock.sendto(reply, clientAddress)
